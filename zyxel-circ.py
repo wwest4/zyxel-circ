@@ -155,5 +155,18 @@ for metric, enabled in METRICS.iteritems():
   if enabled:
     result = { metric: locals()[metric]() }
     results.update(result)
-    
-print results
+   
+jsondata = simplejson.dumps(results)
+                                   
+httptrapurl = os.environ['CIRCONUS_URL']
+                  
+# Form the PUT request      
+requestHeaders = {"Accept": "application/json"}
+req = urllib2.Request(httptrapurl, jsondata, headers = requestHeaders)
+req.get_method = lambda: 'PUT'    
+opener = urllib2.urlopen(req)
+putresponse = simplejson.loads(opener.read())
+              
+# Print the data we get back to the screen so we can make sure it's working
+print putresponse
+
