@@ -3,6 +3,8 @@ import os
 import sys
 import re
 import subprocess
+import simplejson
+import urllib2
 from collections import defaultdict
 
 def raid_status():
@@ -130,11 +132,11 @@ def smart_stats():
 # send zyxel metrics to circonus
 CIRCONUS_URL = 'https://trap.noit.circonus.net/module/httptrap/01234567-89ab-cdef-0123-456789abcdef/mys3cr3t'
 
-# pull CIRCONUS_API_TOKEN from environment
+# pull CIRCONUS_URL from environment
 try:
-  CIRCONUS_API_TOKEN = os.environ['CIRCONUS_API_TOKEN']
+  CIRCONUS_URL = os.environ['CIRCONUS_URL']
 except KeyError:
-  print 'CIRCONUS_API_TOKEN is not set. Exiting.'
+  print 'CIRCONUS_URL is not set. Exiting.'
   sys.exit(1)
 
 # set to True the metrics you want
@@ -156,17 +158,17 @@ for metric, enabled in METRICS.iteritems():
     result = { metric: locals()[metric]() }
     results.update(result)
    
-jsondata = simplejson.dumps(results)
-                                   
-httptrapurl = os.environ['CIRCONUS_URL']
-                  
-# Form the PUT request      
+jsondata = simplejson.dumps(results) 
+
+httptrapurl = CIRCONUS_URL
+
+# Form the PUT request
 requestHeaders = {"Accept": "application/json"}
 req = urllib2.Request(httptrapurl, jsondata, headers = requestHeaders)
-req.get_method = lambda: 'PUT'    
+req.get_method = lambda: 'PUT'
 opener = urllib2.urlopen(req)
 putresponse = simplejson.loads(opener.read())
-              
+                        
 # Print the data we get back to the screen so we can make sure it's working
+print jsondata
 print putresponse
-
